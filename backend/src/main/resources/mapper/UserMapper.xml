@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.generalos.mapper.UserMapper">
+
+    <resultMap id="UserResultMap" type="com.oa.generalos.entity.User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="realName" column="real_name"/>
+        <result property="role" column="role"/>
+        <result property="departmentId" column="department_id"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
+        <result property="status" column="status"/>
+        <result property="errorCount" column="error_count"/>
+        <result property="lockedUntil" column="locked_until"/>
+        <result property="mustChangePassword" column="must_change_password"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByUsername" resultMap="UserResultMap">
+        SELECT * FROM sys_user WHERE username = #{username}
+    </select>
+
+    <select id="findById" resultMap="UserResultMap">
+        SELECT * FROM sys_user WHERE id = #{id}
+    </select>
+
+    <update id="updatePassword">
+        UPDATE sys_user SET password = #{password}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateErrorCount">
+        UPDATE sys_user SET error_count = #{errorCount}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateLockedUntil">
+        UPDATE sys_user SET locked_until = #{lockedUntil}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>

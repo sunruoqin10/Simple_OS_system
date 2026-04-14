@@ -278,12 +278,12 @@ INSERT INTO department (name, description) VALUES
 ('技术部', '负责公司技术研发'),
 ('市场部', '负责公司市场推广');
 
--- 插入管理员用户（密码为 admin123，BCrypt加密）
+-- 插入管理员用户（密码为 admin123，明文存储）
 INSERT INTO sys_user (username, password, real_name, role, department_id, must_change_password) VALUES
-('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '系统管理员', '系统管理员', 1, 1),
-('manager', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '部门主管', '部门主管', 1, 1),
-('user1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '张三', '普通员工', 1, 1),
-('finance', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '财务专员', '财务人员', 2, 1);
+('admin', 'admin123', '系统管理员', '系统管理员', 1, 1),
+('manager', 'admin123', '部门主管', '部门主管', 1, 1),
+('user1', 'admin123', '张三', '普通员工', 1, 1),
+('finance', 'admin123', '财务专员', '财务人员', 2, 1);
 
 -- 插入物品分类数据
 INSERT INTO item_category (name, description) VALUES
