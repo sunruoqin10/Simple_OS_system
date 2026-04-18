@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-GeneralosApplication<generalos>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.oa.generalos.GeneralosApplication",
+            "projectName": "generalos",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

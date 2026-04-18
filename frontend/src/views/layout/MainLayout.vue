@@ -108,6 +108,7 @@ import {
   HomeFilled, Calendar, Food, Setting, User,
   Fold, Expand, ArrowDown, Monitor, Key, SwitchButton
 } from '@element-plus/icons-vue'
+import { changePassword } from '@/api/auth'
 
 const route = useRoute()
 const router = useRouter()
@@ -141,8 +142,79 @@ async function handleCommand(command) {
       ElMessage.info('个人中心功能开发中')
       break
     case 'password':
-      ElMessage.info('修改密码功能开发中')
+      handleChangePassword()
       break
+  }
+}
+
+async function handleChangePassword() {
+  try {
+    // 第一步：输入原密码
+    const oldPasswordResult = await ElMessageBox.prompt(
+      '请输入原密码',
+      '修改密码 - 第1步',
+      {
+        confirmButtonText: '下一步',
+        cancelButtonText: '取消',
+        inputType: 'password',
+        inputPattern: /.{1,}/,
+        inputErrorMessage: '原密码不能为空'
+      }
+    )
+
+    const oldPassword = oldPasswordResult.value
+
+    // 第二步：输入新密码
+    const newPasswordResult = await ElMessageBox.prompt(
+      '请输入新密码（至少6位）',
+      '修改密码 - 第2步',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputType: 'password',
+        inputPattern: /.{6,}/,
+        inputErrorMessage: '新密码长度不能少于6位'
+      }
+    )
+
+    const newPassword = newPasswordResult.value
+
+    // 第三步：确认新密码
+    const confirmResult = await ElMessageBox.prompt(
+      '请再次输入新密码',
+      '修改密码 - 第3步',
+      {
+        confirmButtonText: '确认修改',
+        cancelButtonText: '取消',
+        inputType: 'password',
+        inputPattern: /.{6,}/,
+        inputErrorMessage: '新密码长度不能少于6位'
+      }
+    )
+
+    const confirmPassword = confirmResult.value
+
+    // 验证两次新密码是否一致
+    if (newPassword !== confirmPassword) {
+      ElMessage.error('两次输入的新密码不一致')
+      return
+    }
+
+    // 调用API修改密码
+    const res = await changePassword({
+      oldPassword: oldPassword,
+      newPassword: newPassword
+    })
+
+    if (res.code === 200) {
+      ElMessage.success('密码修改成功')
+    } else {
+      ElMessage.error(res.message || '密码修改失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('密码修改失败，请重试')
+    }
   }
 }
 

@@ -21,3 +21,11 @@ export function getCurrentUser() {
     method: 'get'
   })
 }
+
+export function changePassword(data) {
+  return request({
+    url: '/auth/change-password',
+    method: 'post',
+    data
+  })
+}
