@@ -7,10 +7,13 @@ import com.oa.generalos.service.UserService;
 import com.oa.generalos.utils.JwtUtils;
 import com.oa.generalos.vo.LoginVO;
 import com.oa.generalos.vo.UserVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -94,16 +97,70 @@ public class UserServiceImpl implements UserService {
         userMapper.updatePassword(userId, newPassword);
     }
 
+    @Override
+    public List<UserVO> getAllUsers() {
+        List<User> users = userMapper.findAll();
+        return users.stream()
+                .map(this::convertToUserVO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void createUser(String username, String password, String realName, String role, Long departmentId, String email, String phone) {
+        User existing = userMapper.findByUsername(username);
+        if (existing != null) {
+            throw new BusinessException(400, "用户名已存在");
+        }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(password);
+        user.setRealName(realName);
+        user.setRole(role);
+        user.setDepartmentId(departmentId);
+        user.setEmail(email);
+        user.setPhone(phone);
+        user.setStatus(1);
+        user.setErrorCount(0);
+        user.setMustChangePassword(1);
+
+        userMapper.insert(user);
+    }
+
+    @Override
+    public void updateUser(Long id, String realName, String role, Long departmentId, String email, String phone, Integer status) {
+        User existing = userMapper.findById(id);
+        if (existing == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
+
+        existing.setRealName(realName);
+        existing.setRole(role);
+        existing.setDepartmentId(departmentId);
+        existing.setEmail(email);
+        existing.setPhone(phone);
+        existing.setStatus(status);
+
+        userMapper.update(existing);
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        User existing = userMapper.findById(id);
+        if (existing == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
+        userMapper.deleteById(id);
+    }
+
+    @Override
+    public int getUserCount() {
+        return userMapper.count();
+    }
+
     private UserVO convertToUserVO(User user) {
         UserVO vo = new UserVO();
-        vo.setId(user.getId());
-        vo.setUsername(user.getUsername());
-        vo.setRealName(user.getRealName());
-        vo.setRole(user.getRole());
-        vo.setDepartmentId(user.getDepartmentId());
-        vo.setEmail(user.getEmail());
-        vo.setPhone(user.getPhone());
-        vo.setMustChangePassword(user.getMustChangePassword());
+        BeanUtils.copyProperties(user, vo);
         return vo;
     }
 }

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.generalos.mapper.AttendanceMapper">
+
+    <resultMap id="AttendanceResultMap" type="com.oa.generalos.entity.Attendance">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="year" column="year"/>
+        <result property="month" column="month"/>
+        <result property="day" column="day"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="AttendanceResultMap">
+        SELECT * FROM attendance ORDER BY year DESC, month DESC, day DESC
+    </select>
+
+    <select id="findById" resultMap="AttendanceResultMap">
+        SELECT * FROM attendance WHERE id = #{id}
+    </select>
+
+    <select id="findByUserId" resultMap="AttendanceResultMap">
+        SELECT * FROM attendance WHERE user_id = #{userId}
+        ORDER BY year DESC, month DESC, day DESC
+    </select>
+
+    <select id="findByYearMonth" resultMap="AttendanceResultMap">
+        SELECT * FROM attendance WHERE year = #{year} AND month = #{month}
+        ORDER BY day ASC
+    </select>
+
+    <select id="findByUserIdAndDate" resultMap="AttendanceResultMap">
+        SELECT * FROM attendance
+        WHERE user_id = #{userId} AND year = #{year}
+        AND month = #{month} AND day = #{day}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO attendance (user_id, year, month, day, status, remark, created_at, updated_at)
+        VALUES (#{userId}, #{year}, #{month}, #{day}, #{status}, #{remark}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE attendance
+        SET status = #{status},
+            remark = #{remark},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM attendance WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByUserIdAndDate">
+        DELETE FROM attendance
+        WHERE user_id = #{userId} AND year = #{year}
+        AND month = #{month} AND day = #{day}
+    </delete>
+
+    <select id="countByYearMonth" resultType="int">
+        SELECT COUNT(*) FROM attendance WHERE year = #{year} AND month = #{month}
+    </select>
+
+    <select id="countByUserIdAndYearMonth" resultType="int">
+        SELECT COUNT(*) FROM attendance
+        WHERE user_id = #{userId} AND year = #{year} AND month = #{month}
+    </select>
+
+</mapper>

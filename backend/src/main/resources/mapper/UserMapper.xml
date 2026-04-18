@@ -27,6 +27,35 @@
         SELECT * FROM sys_user WHERE id = #{id}
     </select>
 
+    <select id="findAll" resultMap="UserResultMap">
+        SELECT * FROM sys_user ORDER BY id ASC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_user (username, password, real_name, role, department_id, email, phone, status, error_count, must_change_password, created_at, updated_at)
+        VALUES (#{username}, #{password}, #{realName}, #{role}, #{departmentId}, #{email}, #{phone}, #{status}, #{errorCount}, #{mustChangePassword}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE sys_user
+        SET real_name = #{realName},
+            role = #{role},
+            department_id = #{departmentId},
+            email = #{email},
+            phone = #{phone},
+            status = #{status},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM sys_user WHERE id = #{id}
+    </delete>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM sys_user
+    </select>
+
     <update id="updatePassword">
         UPDATE sys_user SET password = #{password}, updated_at = NOW()
         WHERE id = #{id}

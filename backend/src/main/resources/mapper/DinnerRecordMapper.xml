@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.generalos.mapper.DinnerRecordMapper">
+
+    <resultMap id="DinnerRecordResultMap" type="com.oa.generalos.entity.DinnerRecord">
+        <id property="id" column="id"/>
+        <result property="recordDate" column="record_date"/>
+        <result property="department" column="department"/>
+        <result property="participantCount" column="participant_count"/>
+        <result property="amount" column="amount"/>
+        <result property="purpose" column="purpose"/>
+        <result property="responsiblePerson" column="responsible_person"/>
+        <result property="invoicePath" column="invoice_path"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="DinnerRecordResultMap">
+        SELECT * FROM dinner_record ORDER BY record_date DESC
+    </select>
+
+    <select id="findById" resultMap="DinnerRecordResultMap">
+        SELECT * FROM dinner_record WHERE id = #{id}
+    </select>
+
+    <select id="findByDateRange" resultMap="DinnerRecordResultMap">
+        SELECT * FROM dinner_record
+        WHERE record_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY record_date DESC
+    </select>
+
+    <select id="findByDepartment" resultMap="DinnerRecordResultMap">
+        SELECT * FROM dinner_record WHERE department = #{department}
+        ORDER BY record_date DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO dinner_record (record_date, department, participant_count, amount, purpose,
+                                   responsible_person, invoice_path, created_by, created_at, updated_at)
+        VALUES (#{recordDate}, #{department}, #{participantCount}, #{amount}, #{purpose},
+                #{responsiblePerson}, #{invoicePath}, #{createdBy}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE dinner_record
+        SET record_date = #{recordDate},
+            department = #{department},
+            participant_count = #{participantCount},
+            amount = #{amount},
+            purpose = #{purpose},
+            responsible_person = #{responsiblePerson},
+            invoice_path = #{invoicePath},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM dinner_record WHERE id = #{id}
+    </delete>
+
+    <select id="sumAmountByDateRange" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM dinner_record
+        WHERE record_date BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+    <select id="sumAmountByDepartment" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM dinner_record
+        WHERE department = #{department}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM dinner_record
+    </select>
+
+    <select id="countByDateRange" resultType="int">
+        SELECT COUNT(*) FROM dinner_record
+        WHERE record_date BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+</mapper>

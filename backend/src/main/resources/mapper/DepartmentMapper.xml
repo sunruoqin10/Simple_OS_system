@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.generalos.mapper.DepartmentMapper">
+
+    <resultMap id="DepartmentResultMap" type="com.oa.generalos.entity.Department">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="DepartmentResultMap">
+        SELECT * FROM department ORDER BY id ASC
+    </select>
+
+    <select id="findById" resultMap="DepartmentResultMap">
+        SELECT * FROM department WHERE id = #{id}
+    </select>
+
+    <select id="findByName" resultMap="DepartmentResultMap">
+        SELECT * FROM department WHERE name = #{name}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO department (name, description, created_at, updated_at)
+        VALUES (#{name}, #{description}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE department
+        SET name = #{name},
+            description = #{description},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM department WHERE id = #{id}
+    </delete>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM department
+    </select>
+
+</mapper>

@@ -18,6 +18,30 @@ const routes = [
         name: 'Dashboard',
         component: () => import('@/views/DashboardView.vue'),
         meta: { title: '首页', requiresAuth: true }
+      },
+      {
+        path: '/departments',
+        name: 'Department',
+        component: () => import('@/views/system/DepartmentView.vue'),
+        meta: { title: '部门管理', requiresAuth: true }
+      },
+      {
+        path: '/users',
+        name: 'User',
+        component: () => import('@/views/system/UserView.vue'),
+        meta: { title: '用户管理', requiresAuth: true }
+      },
+      {
+        path: '/attendance',
+        name: 'Attendance',
+        component: () => import('@/views/attendance/AttendanceView.vue'),
+        meta: { title: '考勤管理', requiresAuth: true }
+      },
+      {
+        path: '/dinner',
+        name: 'Dinner',
+        component: () => import('@/views/dinner/DinnerRecordView.vue'),
+        meta: { title: '会餐费管理', requiresAuth: true }
       }
     ]
   },
