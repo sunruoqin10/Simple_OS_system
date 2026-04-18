@@ -248,6 +248,94 @@ CREATE TABLE IF NOT EXISTS check_plan (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='盘点计划表';
 
 -- =============================================
+-- 15. 字典分类表 (dict_category)
+-- =============================================
+CREATE TABLE IF NOT EXISTS dict_category (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '分类ID',
+    code VARCHAR(50) NOT NULL UNIQUE COMMENT '分类代码',
+    name VARCHAR(100) NOT NULL COMMENT '分类名称',
+    parent_id BIGINT DEFAULT NULL COMMENT '父级ID',
+    sort_order INT DEFAULT 0 COMMENT '排序号',
+    status TINYINT DEFAULT 1 COMMENT '状态：1启用，0禁用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_code (code),
+    INDEX idx_parent_id (parent_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='字典分类表';
+
+-- =============================================
+-- 16. 字典项表 (dict_item)
+-- =============================================
+CREATE TABLE IF NOT EXISTS dict_item (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '字典项ID',
+    category_id BIGINT NOT NULL COMMENT '分类ID',
+    code VARCHAR(50) NOT NULL COMMENT '字典代码',
+    name VARCHAR(100) NOT NULL COMMENT '字典名称',
+    description VARCHAR(200) COMMENT '说明',
+    sort_order INT DEFAULT 0 COMMENT '排序号',
+    status TINYINT DEFAULT 1 COMMENT '状态：1启用，0禁用',
+    extra JSON COMMENT '扩展字段',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_category_id (category_id),
+    INDEX idx_code (code),
+    INDEX idx_status (status),
+    UNIQUE KEY uk_category_code (category_id, code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='字典项表';
+
+-- =============================================
+-- 初始化数据字典数据
+-- =============================================
+
+-- 插入考勤状态分类
+INSERT INTO dict_category (code, name, parent_id, sort_order, status) VALUES
+('DICT_ATT', '考勤状态', NULL, 1, 1),
+('DICT_ROLE', '用户角色', NULL, 2, 1),
+('DICT_ITEM_CATEGORY', '物品分类', NULL, 3, 1),
+('DICT_APPROVAL', '审批状态', NULL, 4, 1),
+('DICT_INV_ADJUST', '库存调整类型', NULL, 5, 1);
+
+-- 插入考勤状态字典项
+INSERT INTO dict_item (category_id, code, name, description, sort_order, status) VALUES
+(1, 'ATT001', '正常上班', '正常出勤', 1, 1),
+(1, 'ATT002', '迟到', '上班迟到', 2, 1),
+(1, 'ATT003', '早退', '上班早退', 3, 1),
+(1, 'ATT004', '全天休假', '全天请假', 4, 1),
+(1, 'ATT005', '半天休假', '半天请假', 5, 1),
+(1, 'ATT006', '旷工', '无故缺勤', 6, 1),
+(1, 'ATT007', '出差', '外出办公', 7, 1),
+(1, 'ATT008', '加班', '延长工时', 8, 1);
+
+-- 插入用户角色字典项
+INSERT INTO dict_item (category_id, code, name, description, sort_order, status) VALUES
+(2, 'ROLE_ADMIN', '系统管理员', '系统全部功能管理', 1, 1),
+(2, 'ROLE_DEPT', '部门主管', '部门内部管理、审批', 2, 1),
+(2, 'ROLE_USER', '普通员工', '基础功能操作', 3, 1),
+(2, 'ROLE_FIN', '财务人员', '财务相关功能', 4, 1);
+
+-- 插入物品分类字典项
+INSERT INTO dict_item (category_id, code, name, description, sort_order, status) VALUES
+(3, 'CAT_OFFICE', '办公用品', '笔、纸、文件夹等', 1, 1),
+(3, 'CAT_CONSUME', '消耗品', '打印纸、墨盒等', 2, 1),
+(3, 'CAT_ASSET', '设备资产', '电脑、打印机等', 3, 1);
+
+-- 插入审批状态字典项
+INSERT INTO dict_item (category_id, code, name, description, sort_order, status) VALUES
+(4, 'APP_PEND', '待审批', '等待审批', 1, 1),
+(4, 'APP_PASS', '已通过', '审批通过', 2, 1),
+(4, 'APP_REJ', '已拒绝', '审批拒绝', 3, 1),
+(4, 'APP_CANC', '已取消', '申请人取消', 4, 1);
+
+-- 插入库存调整类型字典项
+INSERT INTO dict_item (category_id, code, name, description, sort_order, status) VALUES
+(5, 'INV_ADD', '盘盈', '实际多于账面', 1, 1),
+(5, 'INV_SUB', '盘亏', '实际少于账面', 2, 1),
+(5, 'INV_LOSS', '报损', '损坏报废', 3, 1),
+(5, 'INV_GIFT', '赠送', '赠送物品', 4, 1),
+(5, 'INV_TRANS', '调拨', '部门间调拨', 5, 1);
+
+-- =============================================
 -- 15. 盘点明细表 (check_record)
 -- =============================================
 CREATE TABLE IF NOT EXISTS check_record (

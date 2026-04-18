@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.generalos.mapper.DictCategoryMapper">
+    
+    <resultMap id="BaseResultMap" type="com.oa.generalos.entity.DictCategory">
+        <id column="id" property="id"/>
+        <result column="code" property="code"/>
+        <result column="name" property="name"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+    
+    <resultMap id="VOResultMap" type="com.oa.generalos.vo.DictCategoryVO">
+        <id column="id" property="id"/>
+        <result column="code" property="code"/>
+        <result column="name" property="name"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+    
+    <select id="selectAll" resultMap="VOResultMap">
+        SELECT id, code, name, parent_id, sort_order, status, created_at, updated_at
+        FROM dict_category
+        ORDER BY sort_order ASC, id ASC
+    </select>
+    
+    <select id="selectById" resultMap="VOResultMap">
+        SELECT id, code, name, parent_id, sort_order, status, created_at, updated_at
+        FROM dict_category
+        WHERE id = #{id}
+    </select>
+    
+    <select id="selectByCode" resultMap="VOResultMap">
+        SELECT id, code, name, parent_id, sort_order, status, created_at, updated_at
+        FROM dict_category
+        WHERE code = #{code}
+    </select>
+    
+    <insert id="insert" parameterType="com.oa.generalos.entity.DictCategory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO dict_category (code, name, parent_id, sort_order, status)
+        VALUES (#{code}, #{name}, #{parentId}, #{sortOrder}, #{status})
+    </insert>
+    
+    <update id="update" parameterType="com.oa.generalos.entity.DictCategory">
+        UPDATE dict_category
+        SET code = #{code},
+            name = #{name},
+            parent_id = #{parentId},
+            sort_order = #{sortOrder},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteById">
+        DELETE FROM dict_category WHERE id = #{id}
+    </delete>
+    
+    <select id="countByParentId" resultType="int">
+        SELECT COUNT(*) FROM dict_category WHERE parent_id = #{parentId}
+    </select>
+    
+</mapper>

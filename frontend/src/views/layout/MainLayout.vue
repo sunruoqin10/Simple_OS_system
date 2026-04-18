@@ -44,6 +44,7 @@
           </template>
           <el-menu-item index="/users">用户管理</el-menu-item>
           <el-menu-item index="/departments">部门管理</el-menu-item>
+          <el-menu-item index="/dict">数据字典</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>

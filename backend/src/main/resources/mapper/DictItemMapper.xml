@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.generalos.mapper.DictItemMapper">
+    
+    <resultMap id="BaseResultMap" type="com.oa.generalos.entity.DictItem">
+        <id column="id" property="id"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="code" property="code"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="status" property="status"/>
+        <result column="extra" property="extra"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+    
+    <resultMap id="VOResultMap" type="com.oa.generalos.vo.DictItemVO">
+        <id column="id" property="id"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="category_code" property="categoryCode"/>
+        <result column="category_name" property="categoryName"/>
+        <result column="code" property="code"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="status" property="status"/>
+        <result column="extra" property="extra"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+    
+    <select id="selectAll" resultMap="VOResultMap">
+        SELECT i.id, i.category_id, c.code as category_code, c.name as category_name,
+               i.code, i.name, i.description, i.sort_order, i.status, i.extra, i.created_at, i.updated_at
+        FROM dict_item i
+        LEFT JOIN dict_category c ON i.category_id = c.id
+        ORDER BY c.sort_order ASC, i.sort_order ASC, i.id ASC
+    </select>
+    
+    <select id="selectByCategoryId" resultMap="VOResultMap">
+        SELECT i.id, i.category_id, c.code as category_code, c.name as category_name,
+               i.code, i.name, i.description, i.sort_order, i.status, i.extra, i.created_at, i.updated_at
+        FROM dict_item i
+        LEFT JOIN dict_category c ON i.category_id = c.id
+        WHERE i.category_id = #{categoryId}
+        ORDER BY i.sort_order ASC, i.id ASC
+    </select>
+    
+    <select id="selectEnabledByCategoryId" resultMap="VOResultMap">
+        SELECT i.id, i.category_id, c.code as category_code, c.name as category_name,
+               i.code, i.name, i.description, i.sort_order, i.status, i.extra, i.created_at, i.updated_at
+        FROM dict_item i
+        LEFT JOIN dict_category c ON i.category_id = c.id
+        WHERE i.category_id = #{categoryId} AND i.status = 1
+        ORDER BY i.sort_order ASC, i.id ASC
+    </select>
+    
+    <select id="selectById" resultMap="VOResultMap">
+        SELECT i.id, i.category_id, c.code as category_code, c.name as category_name,
+               i.code, i.name, i.description, i.sort_order, i.status, i.extra, i.created_at, i.updated_at
+        FROM dict_item i
+        LEFT JOIN dict_category c ON i.category_id = c.id
+        WHERE i.id = #{id}
+    </select>
+    
+    <select id="selectByCategoryAndCode" resultMap="VOResultMap">
+        SELECT i.id, i.category_id, c.code as category_code, c.name as category_name,
+               i.code, i.name, i.description, i.sort_order, i.status, i.extra, i.created_at, i.updated_at
+        FROM dict_item i
+        LEFT JOIN dict_category c ON i.category_id = c.id
+        WHERE i.category_id = #{categoryId} AND i.code = #{code}
+    </select>
+    
+    <insert id="insert" parameterType="com.oa.generalos.entity.DictItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO dict_item (category_id, code, name, description, sort_order, status, extra)
+        VALUES (#{categoryId}, #{code}, #{name}, #{description}, #{sortOrder}, #{status}, #{extra})
+    </insert>
+    
+    <update id="update" parameterType="com.oa.generalos.entity.DictItem">
+        UPDATE dict_item
+        SET category_id = #{categoryId},
+            code = #{code},
+            name = #{name},
+            description = #{description},
+            sort_order = #{sortOrder},
+            status = #{status},
+            extra = #{extra}
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteById">
+        DELETE FROM dict_item WHERE id = #{id}
+    </delete>
+    
+    <update id="updateStatus">
+        UPDATE dict_item SET status = #{status} WHERE id = #{id}
+    </update>
+    
+    <select id="countByCategoryId" resultType="int">
+        SELECT COUNT(*) FROM dict_item WHERE category_id = #{categoryId}
+    </select>
+    
+    <select id="search" resultMap="VOResultMap">
+        SELECT i.id, i.category_id, c.code as category_code, c.name as category_name,
+               i.code, i.name, i.description, i.sort_order, i.status, i.extra, i.created_at, i.updated_at
+        FROM dict_item i
+        LEFT JOIN dict_category c ON i.category_id = c.id
+        WHERE i.code LIKE CONCAT('%', #{keyword}, '%')
+           OR i.name LIKE CONCAT('%', #{keyword}, '%')
+           OR i.description LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY c.sort_order ASC, i.sort_order ASC
+    </select>
+    
+</mapper>

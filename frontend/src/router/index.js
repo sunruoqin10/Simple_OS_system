@@ -32,6 +32,12 @@ const routes = [
         meta: { title: '用户管理', requiresAuth: true }
       },
       {
+        path: '/dict',
+        name: 'Dict',
+        component: () => import('@/views/system/DictView.vue'),
+        meta: { title: '数据字典', requiresAuth: true }
+      },
+      {
         path: '/attendance',
         name: 'Attendance',
         component: () => import('@/views/attendance/AttendanceView.vue'),
