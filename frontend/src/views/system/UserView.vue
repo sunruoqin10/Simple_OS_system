@@ -14,7 +14,11 @@
         <el-table-column prop="username" label="用户名" width="150" />
         <el-table-column prop="realName" label="姓名" width="120" />
         <el-table-column prop="role" label="角色" width="120" />
-        <el-table-column prop="departmentId" label="部门ID" width="100" />
+        <el-table-column label="部门" width="120">
+          <template #default="{ row }">
+            {{ getDepartmentName(row.departmentId) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="email" label="邮箱" width="180" />
         <el-table-column prop="phone" label="电话" width="130" />
         <el-table-column prop="status" label="状态" width="80">
@@ -57,9 +61,12 @@
         </el-form-item>
         <el-form-item label="角色" prop="role">
           <el-select v-model="form.role" placeholder="请选择角色">
-            <el-option label="系统管理员" value="系统管理员" />
-            <el-option label="部门管理员" value="部门管理员" />
-            <el-option label="普通员工" value="普通员工" />
+            <el-option
+              v-for="role in roleList"
+              :key="role.code"
+              :label="role.name"
+              :value="role.name"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="部门" prop="departmentId">
@@ -101,10 +108,14 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { getUserList, createUser, updateUser, deleteUser } from '@/api/user'
 import { getDepartmentList } from '@/api/department'
+import { getItemsByCategory } from '@/api/dict'
+
+const ROLE_CATEGORY_ID = 2
 
 const loading = ref(false)
 const users = ref([])
 const departments = ref([])
+const roleList = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('新增用户')
 const submitLoading = ref(false)
@@ -162,6 +173,23 @@ async function loadDepartments() {
   } catch (error) {
     console.error('加载部门列表失败', error)
   }
+}
+
+async function loadRoleList() {
+  try {
+    const res = await getItemsByCategory(ROLE_CATEGORY_ID)
+    if (res.code === 200) {
+      roleList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('加载角色字典失败', error)
+  }
+}
+
+function getDepartmentName(departmentId) {
+  if (!departmentId) return '-'
+  const dept = departments.value.find(d => d.id === departmentId)
+  return dept ? dept.name : '-'
 }
 
 function handleCreate() {
@@ -262,6 +290,7 @@ function handleDialogClose() {
 onMounted(() => {
   loadUsers()
   loadDepartments()
+  loadRoleList()
 })
 </script>
 

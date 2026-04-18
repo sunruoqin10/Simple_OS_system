@@ -89,13 +89,12 @@
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-select v-model="form.status" placeholder="请选择状态">
-            <el-option label="正常上班" value="正常上班" />
-            <el-option label="迟到" value="迟到" />
-            <el-option label="早退" value="早退" />
-            <el-option label="请假" value="请假" />
-            <el-option label="旷工" value="旷工" />
-            <el-option label="出差" value="出差" />
-            <el-option label="加班" value="加班" />
+            <el-option
+              v-for="item in attendanceStatusList"
+              :key="item.code"
+              :label="item.name"
+              :value="item.name"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
@@ -128,12 +127,16 @@ import {
   deleteAttendance
 } from '@/api/attendance'
 import { getUserList } from '@/api/user'
+import { getItemsByCategory } from '@/api/dict'
 import { useUserStore } from '@/stores/user'
+
+const ATT_CATEGORY_ID = 1
 
 const userStore = useUserStore()
 const loading = ref(false)
 const attendances = ref([])
 const users = ref([])
+const attendanceStatusList = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('考勤打卡')
 const submitLoading = ref(false)
@@ -171,21 +174,15 @@ function getAttendanceStatus(dateStr) {
 }
 
 function getAttendanceType(status) {
-  switch (status) {
-    case '正常上班':
-      return 'success'
-    case '迟到':
-    case '早退':
-    case '旷工':
-      return 'danger'
-    case '请假':
-      return 'warning'
-    case '出差':
-    case '加班':
-      return 'info'
-    default:
-      return ''
+  const statusItem = attendanceStatusList.value.find(s => s.name === status)
+  if (statusItem && statusItem.description) {
+    const desc = statusItem.description
+    if (desc.includes('正常')) return 'success'
+    if (desc.includes('迟到') || desc.includes('早退') || desc.includes('旷工')) return 'danger'
+    if (desc.includes('休假') || desc.includes('请假')) return 'warning'
+    if (desc.includes('出差') || desc.includes('加班')) return 'info'
   }
+  return ''
 }
 
 async function loadAttendances() {
@@ -212,6 +209,17 @@ async function loadUsers() {
     }
   } catch (error) {
     console.error('加载用户列表失败', error)
+  }
+}
+
+async function loadAttendanceStatus() {
+  try {
+    const res = await getItemsByCategory(ATT_CATEGORY_ID)
+    if (res.code === 200) {
+      attendanceStatusList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('加载考勤状态字典失败', error)
   }
 }
 
@@ -337,6 +345,7 @@ watch(calendarDate, () => {
 onMounted(() => {
   loadAttendances()
   loadUsers()
+  loadAttendanceStatus()
 })
 </script>
 
