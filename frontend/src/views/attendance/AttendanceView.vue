@@ -3,15 +3,15 @@
     <div class="page-header">
       <h1 class="page-title">考勤管理</h1>
       <div class="header-actions">
-        <el-select v-model="selectedUserId" placeholder="选择用户" clearable style="width: 150px; margin-right: 10px" @change="handleUserChange">
+        <el-select v-if="hasPermission('ATT_VIEW_ALL')" v-model="selectedUserId" placeholder="选择用户" clearable style="width: 150px; margin-right: 10px" @change="handleUserChange">
           <el-option label="查看全部" :value="null" />
           <el-option v-for="user in users" :key="user.id" :label="user.realName || user.username" :value="user.id" />
         </el-select>
-        <el-button type="success" @click="handleExport">
+        <el-button v-if="hasPermission('ATT_EXPORT')" type="success" @click="handleExport">
           <el-icon><Download /></el-icon>
           导出Excel
         </el-button>
-        <el-button type="primary" @click="handleMark">
+        <el-button v-if="hasPermission('ATT_EDIT_OWN')" type="primary" @click="handleMark">
           <el-icon><Calendar /></el-icon>
           考勤打卡
         </el-button>
@@ -80,7 +80,7 @@
       </el-calendar>
     </el-card>
 
-    <el-card class="matrix-card">
+    <el-card v-if="hasPermission('ATT_VIEW_ALL')" class="matrix-card">
       <template #header>
         <div class="card-header">
           <span class="card-title">当月考勤明细</span>
@@ -113,7 +113,7 @@
       <template #header>
         <div class="card-header">
           <span class="card-title">考勤记录</span>
-          <el-button type="primary" size="small" @click="handleAdd">
+          <el-button v-if="hasPermission('ATT_EDIT_OWN')" type="primary" size="small" @click="handleAdd">
             <el-icon><Plus /></el-icon>
             新增记录
           </el-button>
@@ -135,13 +135,13 @@
           </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" show-overflow-tooltip />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column v-if="hasPermission('ATT_EDIT_OWN') || hasPermission('ATT_VIEW_ALL')" label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">
               <el-icon><Edit /></el-icon>
               编辑
             </el-button>
-            <el-button type="danger" size="small" @click="handleDelete(row)">
+            <el-button v-if="hasPermission('ATT_VIEW_ALL')" type="danger" size="small" @click="handleDelete(row)">
               <el-icon><Delete /></el-icon>
               删除
             </el-button>
@@ -217,9 +217,11 @@ import { getUserList } from '@/api/user'
 import { getItemsByCategory } from '@/api/dict'
 import { useUserStore } from '@/stores/user'
 
+const userStore = useUserStore()
+const { hasPermission } = userStore
+
 const ATT_CATEGORY_ID = 1
 
-const userStore = useUserStore()
 const loading = ref(false)
 const attendances = ref([])
 const users = ref([])
@@ -645,15 +647,9 @@ watch(calendarDate, () => {
   currentMonth.value = date.getMonth() + 1
   loadAttendances()
   loadStatistics()
-  loadMatrixData()
-})
-
-onMounted(() => {
-  loadAttendances()
-  loadUsers()
-  loadAttendanceStatus()
-  loadStatistics()
-  loadMatrixData()
+  if (hasPermission('ATT_VIEW_ALL')) {
+    loadMatrixData()
+  }
 })
 </script>
 

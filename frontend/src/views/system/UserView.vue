@@ -258,7 +258,7 @@ function handleEdit(row) {
   dialogVisible.value = true
 }
 
-function handleDelete(row) {
+async function handleDelete(row) {
   try {
     await ElMessageBox.confirm(
       `确定要删除用户"${row.username}"吗？`,

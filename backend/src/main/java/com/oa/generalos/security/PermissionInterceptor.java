@@ -7,13 +7,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class PermissionInterceptor extends OncePerRequestFilter {
@@ -35,9 +34,6 @@ public class PermissionInterceptor extends OncePerRequestFilter {
                 Long userId = jwtUtils.getUserIdFromToken(token);
                 if (userId != null) {
                     List<String> permissions = roleService.getPermissionCodesByUserId(userId);
-                    Map<String, Object> userInfo = new HashMap<>();
-                    userInfo.put("permissions", permissions);
-                    userInfo.put("userId", userId);
                     request.setAttribute("userPermissions", permissions);
                     request.setAttribute("userId", userId);
                 }
