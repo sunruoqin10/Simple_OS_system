@@ -62,6 +62,23 @@ CREATE TABLE IF NOT EXISTS attendance (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='考勤表';
 
 -- =============================================
+-- 3.1 节假日配置表 (holiday)
+-- =============================================
+CREATE TABLE IF NOT EXISTS holiday (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '节假日ID',
+    year INT NOT NULL COMMENT '年份',
+    month INT NOT NULL COMMENT '月份',
+    day INT NOT NULL COMMENT '日期',
+    name VARCHAR(50) NOT NULL COMMENT '节假日名称',
+    type VARCHAR(20) NOT NULL DEFAULT '法定节假日' COMMENT '类型：法定节假日/调休',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_year_month_day (year, month, day),
+    INDEX idx_year (year),
+    INDEX idx_type (type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='节假日配置表';
+
+-- =============================================
 -- 4. 会餐费记录表 (dinner_record)
 -- =============================================
 CREATE TABLE IF NOT EXISTS dinner_record (
@@ -536,8 +553,8 @@ SELECT 4, id FROM sys_permission WHERE code IN ('CHECK_AUDIT');
 
 -- 初始化用户角色关联（将现有用户的角色关联起来）
 INSERT INTO sys_user_role (user_id, role_id)
-SELECT id, 
-    CASE role 
+SELECT id,
+    CASE role
         WHEN '系统管理员' THEN 1
         WHEN '部门主管' THEN 2
         WHEN '普通员工' THEN 3
@@ -545,3 +562,50 @@ SELECT id,
         ELSE 3
     END
 FROM sys_user WHERE status = 1;
+
+-- =============================================
+-- 初始化2026年节假日数据
+-- =============================================
+
+-- 插入2026年法定节假日
+INSERT INTO holiday (year, month, day, name, type) VALUES
+-- 元旦
+(2026, 1, 1, '元旦', '法定节假日'),
+-- 春节
+(2026, 1, 28, '春节', '法定节假日'),
+(2026, 1, 29, '春节', '法定节假日'),
+(2026, 1, 30, '春节', '法定节假日'),
+(2026, 1, 31, '春节', '法定节假日'),
+(2026, 2, 1, '春节', '法定节假日'),
+(2026, 2, 2, '春节', '法定节假日'),
+-- 清明节
+(2026, 4, 4, '清明节', '法定节假日'),
+(2026, 4, 5, '清明节', '法定节假日'),
+(2026, 4, 6, '清明节', '法定节假日'),
+-- 劳动节
+(2026, 5, 1, '劳动节', '法定节假日'),
+(2026, 5, 2, '劳动节', '法定节假日'),
+(2026, 5, 3, '劳动节', '法定节假日'),
+-- 端午节
+(2026, 6, 19, '端午节', '法定节假日'),
+(2026, 6, 20, '端午节', '法定节假日'),
+(2026, 6, 21, '端午节', '法定节假日'),
+-- 国庆节
+(2026, 10, 1, '国庆节', '法定节假日'),
+(2026, 10, 2, '国庆节', '法定节假日'),
+(2026, 10, 3, '国庆节', '法定节假日'),
+(2026, 10, 4, '国庆节', '法定节假日'),
+(2026, 10, 5, '国庆节', '法定节假日'),
+(2026, 10, 6, '国庆节', '法定节假日'),
+(2026, 10, 7, '国庆节', '法定节假日'),
+(2026, 10, 8, '国庆节', '法定节假日');
+
+-- 插入2026年周末调休工作日
+INSERT INTO holiday (year, month, day, name, type) VALUES
+-- 春节调休（周六上班）
+(2026, 2, 15, '春节调休', '调休'),
+-- 清明节调休（周日上班）
+(2026, 4, 12, '清明节调休', '调休'),
+-- 国庆节调休
+(2026, 9, 28, '国庆节调休', '调休'),
+(2026, 10, 10, '国庆节调休', '调休');

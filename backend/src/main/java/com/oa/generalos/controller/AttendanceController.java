@@ -110,8 +110,12 @@ public class AttendanceController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @RequirePermission("ATT_VIEW_ALL")
+    @RequirePermission(value = {"ATT_EDIT_OWN", "ATT_VIEW_ALL"}, logical = RequirePermission.Logical.OR)
     public Result<Void> deleteAttendance(@PathVariable Long id) {
+        AttendanceVO attendance = attendanceService.getAttendanceById(id);
+        if (!SecurityContext.isCurrentUser(attendance.getUserId()) && !SecurityContext.hasPermission("ATT_VIEW_ALL")) {
+            return Result.error(403, "权限不足，只能删除自己的考勤记录");
+        }
         attendanceService.deleteAttendance(id);
         return Result.success();
     }

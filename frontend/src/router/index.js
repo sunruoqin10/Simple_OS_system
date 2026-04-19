@@ -50,6 +50,12 @@ const routes = [
         meta: { title: '考勤管理', requiresAuth: true }
       },
       {
+        path: '/holiday',
+        name: 'Holiday',
+        component: () => import('@/views/system/HolidayView.vue'),
+        meta: { title: '节假日管理', requiresAuth: true }
+      },
+      {
         path: '/dinner',
         name: 'Dinner',
         component: () => import('@/views/dinner/DinnerRecordView.vue'),

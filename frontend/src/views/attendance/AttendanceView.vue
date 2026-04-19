@@ -141,7 +141,7 @@
               <el-icon><Edit /></el-icon>
               编辑
             </el-button>
-            <el-button v-if="hasPermission('ATT_VIEW_ALL')" type="danger" size="small" @click="handleDelete(row)">
+            <el-button v-if="hasPermission('ATT_EDIT_OWN')" type="danger" size="small" @click="handleDelete(row)">
               <el-icon><Delete /></el-icon>
               删除
             </el-button>
@@ -157,7 +157,7 @@
       @close="handleDialogClose"
     >
       <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
-        <el-form-item label="用户" prop="userId" v-if="!form.id || selectedUserId === null">
+        <el-form-item label="用户" prop="userId" v-if="hasPermission('ATT_VIEW_ALL')">
           <el-select v-model="form.userId" placeholder="请选择用户">
             <el-option v-for="user in users" :key="user.id" :label="user.realName || user.username" :value="user.id" />
           </el-select>
@@ -215,6 +215,7 @@ import {
 } from '@/api/attendance'
 import { getUserList } from '@/api/user'
 import { getItemsByCategory } from '@/api/dict'
+import { getHolidaysByYear } from '@/api/holiday'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -226,6 +227,7 @@ const loading = ref(false)
 const attendances = ref([])
 const users = ref([])
 const attendanceStatusList = ref([])
+const holidays = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('考勤打卡')
 const submitLoading = ref(false)
@@ -272,45 +274,6 @@ const rules = {
   ]
 }
 
-const chineseHolidays = {
-  2026: [
-    { month: 1, day: 1, name: '元旦' },
-    { month: 1, day: 29, name: '春节' },
-    { month: 1, day: 30, name: '春节' },
-    { month: 1, day: 31, name: '春节' },
-    { month: 2, day: 1, name: '春节' },
-    { month: 2, day: 2, name: '春节' },
-    { month: 2, day: 3, name: '春节' },
-    { month: 2, day: 4, name: '春节' },
-    { month: 4, day: 4, name: '清明节' },
-    { month: 4, day: 5, name: '清明节' },
-    { month: 4, day: 6, name: '清明节' },
-    { month: 5, day: 1, name: '劳动节' },
-    { month: 5, day: 2, name: '劳动节' },
-    { month: 5, day: 3, name: '劳动节' },
-    { month: 6, day: 19, name: '端午节' },
-    { month: 6, day: 20, name: '端午节' },
-    { month: 6, day: 21, name: '端午节' },
-    { month: 10, day: 1, name: '国庆节' },
-    { month: 10, day: 2, name: '国庆节' },
-    { month: 10, day: 3, name: '国庆节' },
-    { month: 10, day: 4, name: '国庆节' },
-    { month: 10, day: 5, name: '国庆节' },
-    { month: 10, day: 6, name: '国庆节' },
-    { month: 10, day: 7, name: '国庆节' },
-    { month: 10, day: 8, name: '国庆节' },
-  ]
-}
-
-const weekendWorkdays = {
-  2026: [
-    { month: 2, day: 15 },
-    { month: 4, day: 12 },
-    { month: 9, day: 28 },
-    { month: 10, day: 10 },
-  ]
-}
-
 function isWeekend(dateStr) {
   const date = new Date(dateStr)
   const dayOfWeek = date.getDay()
@@ -323,14 +286,19 @@ function isHoliday(dateStr) {
   const month = date.getMonth() + 1
   const day = date.getDate()
 
-  const holidays = chineseHolidays[year] || []
-  const isInHoliday = holidays.some(h => h.month === month && h.day === day)
+  const holidayItem = holidays.value.find(h =>
+    h.year === year && h.month === month && h.day === day
+  )
 
-  const workdays = weekendWorkdays[year] || []
-  const isWorkday = workdays.some(w => w.month === month && w.day === day)
+  if (holidayItem) {
+    if (holidayItem.type === '调休') {
+      return false
+    }
+    if (holidayItem.type === '法定节假日') {
+      return true
+    }
+  }
 
-  if (isWorkday) return false
-  if (isInHoliday) return true
   return isWeekend(dateStr)
 }
 
@@ -495,6 +463,17 @@ async function loadAttendanceStatus() {
   }
 }
 
+async function loadHolidays() {
+  try {
+    const res = await getHolidaysByYear(currentYear.value)
+    if (res.code === 200) {
+      holidays.value = res.data || []
+    }
+  } catch (error) {
+    console.error('加载节假日数据失败', error)
+  }
+}
+
 function handleUserChange() {
   loadAttendances()
   loadStatistics()
@@ -641,12 +620,24 @@ function nextMonth() {
   loadMatrixData()
 }
 
+onMounted(() => {
+  loadUsers()
+  loadAttendances()
+  loadStatistics()
+  loadAttendanceStatus()
+  loadHolidays()
+  if (hasPermission('ATT_VIEW_ALL')) {
+    loadMatrixData()
+  }
+})
+
 watch(calendarDate, () => {
   const date = new Date(calendarDate.value)
   currentYear.value = date.getFullYear()
   currentMonth.value = date.getMonth() + 1
   loadAttendances()
   loadStatistics()
+  loadHolidays()
   if (hasPermission('ATT_VIEW_ALL')) {
     loadMatrixData()
   }

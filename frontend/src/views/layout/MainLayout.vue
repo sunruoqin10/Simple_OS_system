@@ -27,6 +27,7 @@
             <span>考勤管理</span>
           </template>
           <el-menu-item index="/attendance">考勤日历</el-menu-item>
+          <el-menu-item index="/holiday">节假日管理</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="dinner" v-if="hasPermission('DNM_VIEW')">

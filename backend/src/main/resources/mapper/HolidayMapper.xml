@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.generalos.mapper.HolidayMapper">
+
+    <resultMap id="HolidayResultMap" type="com.oa.generalos.entity.Holiday">
+        <id property="id" column="id"/>
+        <result property="year" column="year"/>
+        <result property="month" column="month"/>
+        <result property="day" column="day"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="HolidayResultMap">
+        SELECT * FROM holiday ORDER BY year DESC, month ASC, day ASC
+    </select>
+
+    <select id="findById" resultMap="HolidayResultMap">
+        SELECT * FROM holiday WHERE id = #{id}
+    </select>
+
+    <select id="findByYear" resultMap="HolidayResultMap">
+        SELECT * FROM holiday WHERE year = #{year}
+        ORDER BY month ASC, day ASC
+    </select>
+
+    <select id="findByDate" resultMap="HolidayResultMap">
+        SELECT * FROM holiday
+        WHERE year = #{year} AND month = #{month} AND day = #{day}
+    </select>
+
+    <select id="findByYearAndType" resultMap="HolidayResultMap">
+        SELECT * FROM holiday
+        WHERE year = #{year} AND type = #{type}
+        ORDER BY month ASC, day ASC
+    </select>
+
+    <select id="findHolidaysByYear" resultMap="HolidayResultMap">
+        SELECT * FROM holiday
+        WHERE year = #{year} AND type = '法定节假日'
+        ORDER BY month ASC, day ASC
+    </select>
+
+    <select id="findWorkdaysByYear" resultMap="HolidayResultMap">
+        SELECT * FROM holiday
+        WHERE year = #{year} AND type = '调休'
+        ORDER BY month ASC, day ASC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO holiday (year, month, day, name, type, created_at, updated_at)
+        VALUES (#{year}, #{month}, #{day}, #{name}, #{type}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE holiday
+        SET name = #{name},
+            type = #{type},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM holiday WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByYear">
+        DELETE FROM holiday WHERE year = #{year}
+    </delete>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM holiday
+    </select>
+
+</mapper>
