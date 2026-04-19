@@ -14,11 +14,15 @@ export function getAttendanceByUserId(userId) {
   })
 }
 
-export function getAttendanceCalendar(year, month) {
+export function getAttendanceCalendar(year, month, userId) {
+  const params = { year, month }
+  if (userId) {
+    params.userId = userId
+  }
   return request({
     url: '/attendance/calendar',
     method: 'get',
-    params: { year, month }
+    params
   })
 }
 
@@ -60,17 +64,42 @@ export function markAttendance(data) {
   })
 }
 
-export function getStatistics(year, month) {
+export function getStatistics(year, month, userId) {
+  const params = { year, month }
+  if (userId) {
+    params.userId = userId
+  }
   return request({
     url: '/attendance/statistics',
     method: 'get',
-    params: { year, month }
+    params
   })
 }
 
 export function getUserStatistics(userId, year, month) {
   return request({
     url: `/attendance/user/${userId}/statistics`,
+    method: 'get',
+    params: { year, month }
+  })
+}
+
+export function exportAttendance(year, month, userId) {
+  const params = { year, month }
+  if (userId) {
+    params.userId = userId
+  }
+  return request({
+    url: '/attendance/export',
+    method: 'get',
+    params,
+    responseType: 'blob'
+  })
+}
+
+export function getAttendanceMatrix(year, month) {
+  return request({
+    url: '/attendance/matrix',
     method: 'get',
     params: { year, month }
   })

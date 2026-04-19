@@ -23,5 +23,9 @@ public interface AttendanceService {
 
     Map<String, Object> getAttendanceStatistics(Integer year, Integer month);
 
+    Map<String, Object> getAttendanceStatistics(Integer year, Integer month, Long userId);
+
     Map<String, Object> getUserAttendanceStatistics(Long userId, Integer year, Integer month);
+
+    List<Map<String, Object>> getAttendanceMatrix(Integer year, Integer month);
 }

@@ -181,4 +181,12 @@ public class AttendanceController {
         if (status.contains("出差")) return "✈";
         return "";
     }
+
+    @GetMapping("/matrix")
+    public Result<List<Map<String, Object>>> getAttendanceMatrix(
+            @RequestParam Integer year,
+            @RequestParam Integer month) {
+        List<Map<String, Object>> matrix = attendanceService.getAttendanceMatrix(year, month);
+        return Result.success(matrix);
+    }
 }

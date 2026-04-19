@@ -1,6 +1,7 @@
 package com.oa.generalos.service.impl;
 
 import com.oa.generalos.entity.Attendance;
+import com.oa.generalos.entity.User;
 import com.oa.generalos.exception.BusinessException;
 import com.oa.generalos.mapper.AttendanceMapper;
 import com.oa.generalos.mapper.UserMapper;
@@ -117,23 +118,81 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public Map<String, Object> getAttendanceStatistics(Integer year, Integer month) {
-        int total = attendanceMapper.countByYearMonth(year, month);
+        return getAttendanceStatistics(year, month, null);
+    }
+
+    @Override
+    public Map<String, Object> getAttendanceStatistics(Integer year, Integer month, Long userId) {
+        List<Attendance> attendances;
+        if (userId != null) {
+            attendances = attendanceMapper.findByUserId(userId).stream()
+                    .filter(a -> a.getYear().equals(year) && a.getMonth().equals(month))
+                    .collect(Collectors.toList());
+        } else {
+            attendances = attendanceMapper.findByYearMonth(year, month);
+        }
+
         Map<String, Object> statistics = new HashMap<>();
         statistics.put("year", year);
         statistics.put("month", month);
-        statistics.put("total", total);
+
+        int normal = 0;
+        int abnormal = 0;
+        int leave = 0;
+        int other = 0;
+
+        for (Attendance attendance : attendances) {
+            String status = attendance.getStatus();
+            if (status != null) {
+                if (status.contains("正常")) {
+                    normal++;
+                } else if (status.contains("迟到") || status.contains("早退") || status.contains("旷工")) {
+                    abnormal++;
+                } else if (status.contains("假") || status.contains("休假")) {
+                    leave++;
+                } else {
+                    other++;
+                }
+            }
+        }
+
+        statistics.put("total", attendances.size());
+        statistics.put("normal", normal);
+        statistics.put("abnormal", abnormal);
+        statistics.put("leave", leave);
+        statistics.put("other", other);
+
         return statistics;
     }
 
     @Override
     public Map<String, Object> getUserAttendanceStatistics(Long userId, Integer year, Integer month) {
-        int total = attendanceMapper.countByUserIdAndYearMonth(userId, year, month);
-        Map<String, Object> statistics = new HashMap<>();
-        statistics.put("userId", userId);
-        statistics.put("year", year);
-        statistics.put("month", month);
-        statistics.put("total", total);
-        return statistics;
+        return getAttendanceStatistics(year, month, userId);
+    }
+
+    @Override
+    public List<Map<String, Object>> getAttendanceMatrix(Integer year, Integer month) {
+        List<User> allUsers = userMapper.findAll();
+        List<Attendance> allAttendances = attendanceMapper.findByYearMonth(year, month);
+
+        List<Map<String, Object>> matrix = new java.util.ArrayList<>();
+
+        for (User user : allUsers) {
+            Map<String, Object> row = new java.util.HashMap<>();
+            row.put("userId", user.getId());
+            row.put("userName", user.getRealName() != null ? user.getRealName() : user.getUsername());
+
+            Map<Integer, String> dayStatus = new java.util.HashMap<>();
+            for (Attendance att : allAttendances) {
+                if (att.getUserId().equals(user.getId())) {
+                    dayStatus.put(att.getDay(), att.getStatus());
+                }
+            }
+            row.put("days", dayStatus);
+            matrix.add(row);
+        }
+
+        return matrix;
     }
 
     private AttendanceVO convertToVO(Attendance attendance) {
