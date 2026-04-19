@@ -1,6 +1,7 @@
 package com.oa.generalos.vo;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class UserVO {
@@ -13,4 +14,5 @@ public class UserVO {
     private String email;
     private String phone;
     private Integer mustChangePassword;
+    private List<String> roles;
 }

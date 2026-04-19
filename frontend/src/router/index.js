@@ -38,6 +38,12 @@ const routes = [
         meta: { title: '数据字典', requiresAuth: true }
       },
       {
+        path: '/roles',
+        name: 'Role',
+        component: () => import('@/views/system/RoleView.vue'),
+        meta: { title: '角色管理', requiresAuth: true }
+      },
+      {
         path: '/attendance',
         name: 'Attendance',
         component: () => import('@/views/attendance/AttendanceView.vue'),

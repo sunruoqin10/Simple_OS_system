@@ -21,7 +21,7 @@
           <template #title>首页</template>
         </el-menu-item>
 
-        <el-sub-menu index="attendance">
+        <el-sub-menu index="attendance" v-if="hasPermission('ATT_VIEW_OWN') || hasPermission('ATT_VIEW_ALL')">
           <template #title>
             <el-icon><Calendar /></el-icon>
             <span>考勤管理</span>
@@ -29,7 +29,7 @@
           <el-menu-item index="/attendance">考勤日历</el-menu-item>
         </el-sub-menu>
 
-        <el-sub-menu index="dinner">
+        <el-sub-menu index="dinner" v-if="hasPermission('DNM_VIEW')">
           <template #title>
             <el-icon><Food /></el-icon>
             <span>会餐费管理</span>
@@ -37,14 +37,15 @@
           <el-menu-item index="/dinner">会餐记录</el-menu-item>
         </el-sub-menu>
 
-        <el-sub-menu index="system" v-if="isAdmin">
+        <el-sub-menu index="system" v-if="hasSystemPermission">
           <template #title>
             <el-icon><Setting /></el-icon>
             <span>系统管理</span>
           </template>
-          <el-menu-item index="/users">用户管理</el-menu-item>
-          <el-menu-item index="/departments">部门管理</el-menu-item>
-          <el-menu-item index="/dict">数据字典</el-menu-item>
+          <el-menu-item index="/users" v-if="hasPermission('SYS_USER_VIEW')">用户管理</el-menu-item>
+          <el-menu-item index="/roles" v-if="hasPermission('SYS_ROLE_EDIT')">角色管理</el-menu-item>
+          <el-menu-item index="/departments" v-if="hasPermission('SYS_DEPT_VIEW')">部门管理</el-menu-item>
+          <el-menu-item index="/dict" v-if="hasPermission('SYS_DICT_VIEW')">数据字典</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
@@ -117,8 +118,16 @@ const userStore = useUserStore()
 
 const isCollapse = ref(false)
 const activeMenu = computed(() => route.path)
-const isAdmin = computed(() => {
-  return userStore.userInfo?.role === '系统管理员' || userStore.roles?.includes('admin')
+
+const hasPermission = (permission) => {
+  return userStore.hasPermission(permission)
+}
+
+const hasSystemPermission = computed(() => {
+  return hasPermission('SYS_USER_VIEW') ||
+         hasPermission('SYS_DEPT_VIEW') ||
+         hasPermission('SYS_DICT_VIEW') ||
+         hasPermission('SYS_ROLE_EDIT')
 })
 
 function toggleCollapse() {

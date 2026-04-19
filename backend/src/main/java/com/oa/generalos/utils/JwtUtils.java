@@ -9,9 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class JwtUtils {
@@ -31,6 +29,14 @@ public class JwtUtils {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("username", username);
+        return createToken(claims, username);
+    }
+
+    public String generateToken(Long userId, String username, List<String> permissions) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("username", username);
+        claims.put("permissions", permissions);
         return createToken(claims, username);
     }
 
@@ -62,6 +68,16 @@ public class JwtUtils {
     public Long getUserIdFromToken(String token) {
         Claims claims = parseToken(token);
         return claims.get("userId", Long.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getPermissionsFromToken(String token) {
+        Claims claims = parseToken(token);
+        Object permissions = claims.get("permissions");
+        if (permissions instanceof List) {
+            return (List<String>) permissions;
+        }
+        return Collections.emptyList();
     }
 
     public boolean isTokenExpired(String token) {

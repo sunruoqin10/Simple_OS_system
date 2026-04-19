@@ -386,3 +386,162 @@ INSERT INTO item (category_id, name, spec, unit, min_stock, price) VALUES
 (2, '矿泉水', '550ml/瓶', '箱', 20, 36.00),
 (3, '台式电脑', 'Dell OptiPlex 3080', '台', 5, 4500.00),
 (3, '打印机', 'HP LaserJet Pro', '台', 3, 1800.00);
+
+-- =============================================
+-- 17. 权限表 (sys_permission)
+-- =============================================
+CREATE TABLE IF NOT EXISTS sys_permission (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '权限ID',
+    code VARCHAR(50) NOT NULL UNIQUE COMMENT '权限代码',
+    name VARCHAR(100) NOT NULL COMMENT '权限名称',
+    category VARCHAR(50) COMMENT '权限分类',
+    description VARCHAR(200) COMMENT '权限描述',
+    sort_order INT DEFAULT 0 COMMENT '排序号',
+    status TINYINT DEFAULT 1 COMMENT '状态：1启用，0禁用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_code (code),
+    INDEX idx_category (category),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='权限表';
+
+-- =============================================
+-- 18. 角色表 (sys_role)
+-- =============================================
+CREATE TABLE IF NOT EXISTS sys_role (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '角色ID',
+    code VARCHAR(50) NOT NULL UNIQUE COMMENT '角色代码',
+    name VARCHAR(100) NOT NULL COMMENT '角色名称',
+    description VARCHAR(200) COMMENT '角色描述',
+    sort_order INT DEFAULT 0 COMMENT '排序号',
+    status TINYINT DEFAULT 1 COMMENT '状态：1启用，0禁用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_code (code),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色表';
+
+-- =============================================
+-- 19. 角色权限关联表 (sys_role_permission)
+-- =============================================
+CREATE TABLE IF NOT EXISTS sys_role_permission (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID',
+    role_id BIGINT NOT NULL COMMENT '角色ID',
+    permission_id BIGINT NOT NULL COMMENT '权限ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    UNIQUE KEY uk_role_permission (role_id, permission_id),
+    INDEX idx_role_id (role_id),
+    INDEX idx_permission_id (permission_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色权限关联表';
+
+-- =============================================
+-- 20. 用户角色关联表 (sys_user_role)
+-- =============================================
+CREATE TABLE IF NOT EXISTS sys_user_role (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    role_id BIGINT NOT NULL COMMENT '角色ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    UNIQUE KEY uk_user_role (user_id, role_id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_role_id (role_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户角色关联表';
+
+-- =============================================
+-- 21. 操作日志表 (sys_operation_log)
+-- =============================================
+CREATE TABLE IF NOT EXISTS sys_operation_log (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '日志ID',
+    user_id BIGINT COMMENT '操作用户ID',
+    action VARCHAR(50) COMMENT '操作类型',
+    resource VARCHAR(50) COMMENT '资源类型',
+    resource_id BIGINT COMMENT '资源ID',
+    detail TEXT COMMENT '操作详情',
+    ip_address VARCHAR(50) COMMENT 'IP地址',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+    INDEX idx_user_id (user_id),
+    INDEX idx_action (action),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志表';
+
+-- =============================================
+-- 初始化权限数据
+-- =============================================
+
+-- 插入权限数据
+INSERT INTO sys_permission (code, name, category, description, sort_order, status) VALUES
+-- 考勤权限
+('ATT_VIEW_OWN', '查看自己的考勤', '考勤', '普通员工查看个人考勤记录', 1, 1),
+('ATT_EDIT_OWN', '修改自己的考勤', '考勤', '普通员工修改个人考勤记录', 2, 1),
+('ATT_VIEW_ALL', '查看所有考勤', '考勤', '管理员查看所有员工考勤', 3, 1),
+('ATT_EXPORT', '导出考勤报表', '考勤', '管理员导出考勤数据', 4, 1),
+-- 会餐权限
+('DNM_VIEW', '查看会餐记录', '会餐', '查看会餐费用记录', 11, 1),
+('DNM_ADD', '添加会餐记录', '会餐', '新增会餐费用记录', 12, 1),
+('DNM_EDIT', '编辑会餐记录', '会餐', '修改会餐费用记录', 13, 1),
+('DNM_DELETE', '删除会餐记录', '会餐', '删除会餐费用记录', 14, 1),
+-- 采购权限
+('PUR_SUBMIT', '提交采购申请', '采购', '员工提交采购申请', 21, 1),
+('PUR_APPROVE', '审批采购申请', '采购', '部门主管审批采购申请', 22, 1),
+('PUR_EXECUTE', '执行采购', '采购', '管理员执行采购', 23, 1),
+('PUR_VIEW', '查看采购记录', '采购', '查看采购历史记录', 24, 1),
+-- 物品权限
+('ITEM_MANAGE', '物品管理', '物品', '物品的增删改查', 31, 1),
+-- 库存权限
+('INV_VIEW', '查看库存', '库存', '查看库存数据', 41, 1),
+('INV_ADJUST', '库存调整', '库存', '调整库存数量', 42, 1),
+-- 领取权限
+('CLAIM_SUBMIT', '提交领取申请', '领取', '员工提交物品领取申请', 51, 1),
+('CLAIM_APPROVE', '审批领取申请', '领取', '部门主管审批领取申请', 52, 1),
+('CLAIM_ISSUE', '发放物品', '领取', '管理员发放物品', 53, 1),
+-- 盘点权限
+('CHECK_CREATE', '创建盘点计划', '盘点', '创建月度盘点计划', 61, 1),
+('CHECK_EXECUTE', '执行盘点', '盘点', '执行库存盘点', 62, 1),
+('CHECK_AUDIT', '核对盘点结果', '盘点', '财务人员核对盘点结果', 63, 1),
+-- 系统-用户权限
+('SYS_USER_VIEW', '查看用户', '系统-用户', '查看用户列表', 71, 1),
+('SYS_USER_EDIT', '用户管理', '系统-用户', '增删改用户', 72, 1),
+-- 系统-部门权限
+('SYS_DEPT_VIEW', '查看部门', '系统-部门', '查看部门列表', 81, 1),
+('SYS_DEPT_EDIT', '部门管理', '系统-部门', '增删改部门', 82, 1),
+-- 系统-角色权限
+('SYS_ROLE_VIEW', '查看角色', '系统-角色', '查看角色列表', 91, 1),
+('SYS_ROLE_EDIT', '角色管理', '系统-角色', '增删改角色，分配权限', 92, 1),
+-- 系统-字典权限
+('SYS_DICT_VIEW', '查看数据字典', '系统-字典', '查看字典分类和字典项', 101, 1),
+('SYS_DICT_EDIT', '数据字典管理', '系统-字典', '增删改字典分类和字典项', 102, 1);
+
+-- 插入角色数据
+INSERT INTO sys_role (code, name, description, sort_order, status) VALUES
+('ROLE_ADMIN', '系统管理员', '系统全部功能管理', 1, 1),
+('ROLE_DEPT', '部门主管', '部门内部管理、审批', 2, 1),
+('ROLE_USER', '普通员工', '基础功能操作', 3, 1),
+('ROLE_FIN', '财务人员', '财务相关功能', 4, 1);
+
+-- 插入角色权限关联数据（系统管理员拥有所有权限）
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT 1, id FROM sys_permission WHERE status = 1;
+
+-- 为部门主管分配权限（审批相关）
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT 2, id FROM sys_permission WHERE code IN ('PUR_APPROVE', 'CLAIM_APPROVE', 'INV_VIEW');
+
+-- 为普通员工分配权限（基础功能）
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT 3, id FROM sys_permission WHERE code IN ('ATT_VIEW_OWN', 'ATT_EDIT_OWN', 'DNM_VIEW', 'DNM_ADD', 'DNM_EDIT', 'PUR_SUBMIT', 'INV_VIEW', 'CLAIM_SUBMIT');
+
+-- 为财务人员分配权限
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT 4, id FROM sys_permission WHERE code IN ('CHECK_AUDIT');
+
+-- 初始化用户角色关联（将现有用户的角色关联起来）
+INSERT INTO sys_user_role (user_id, role_id)
+SELECT id, 
+    CASE role 
+        WHEN '系统管理员' THEN 1
+        WHEN '部门主管' THEN 2
+        WHEN '普通员工' THEN 3
+        WHEN '财务人员' THEN 4
+        ELSE 3
+    END
+FROM sys_user WHERE status = 1;

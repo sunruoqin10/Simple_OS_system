@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa.generalos.mapper.RoleMapper">
+    <resultMap id="VOResultMap" type="com.oa.generalos.vo.RoleVO">
+        <id property="id" column="id"/>
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="permissionCount" column="permission_count"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="VOResultMap">
+        SELECT r.id, r.code, r.name, r.description, r.sort_order, r.status, r.created_at, r.updated_at,
+               (SELECT COUNT(*) FROM sys_role_permission WHERE role_id = r.id) as permission_count
+        FROM sys_role r
+        ORDER BY r.sort_order ASC
+    </select>
+
+    <select id="findByStatus" resultMap="VOResultMap">
+        SELECT r.id, r.code, r.name, r.description, r.sort_order, r.status, r.created_at, r.updated_at,
+               (SELECT COUNT(*) FROM sys_role_permission WHERE role_id = r.id) as permission_count
+        FROM sys_role r
+        WHERE r.status = #{status}
+        ORDER BY r.sort_order ASC
+    </select>
+
+    <select id="findById" resultMap="VOResultMap">
+        SELECT r.id, r.code, r.name, r.description, r.sort_order, r.status, r.created_at, r.updated_at,
+               (SELECT COUNT(*) FROM sys_role_permission WHERE role_id = r.id) as permission_count
+        FROM sys_role r
+        WHERE r.id = #{id}
+    </select>
+
+    <select id="findByCode" resultMap="VOResultMap">
+        SELECT r.id, r.code, r.name, r.description, r.sort_order, r.status, r.created_at, r.updated_at,
+               (SELECT COUNT(*) FROM sys_role_permission WHERE role_id = r.id) as permission_count
+        FROM sys_role r
+        WHERE r.code = #{code}
+    </select>
+
+    <insert id="insert" parameterType="com.oa.generalos.entity.Role" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_role (code, name, description, sort_order, status, created_at, updated_at)
+        VALUES (#{code}, #{name}, #{description}, #{sortOrder}, #{status}, NOW(), NOW())
+    </insert>
+
+    <update id="update" parameterType="com.oa.generalos.entity.Role">
+        UPDATE sys_role
+        SET name = #{name},
+            description = #{description},
+            sort_order = #{sortOrder},
+            status = #{status},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM sys_role WHERE id = #{id}
+    </delete>
+
+    <select id="countByCode" resultType="int">
+        SELECT COUNT(*) FROM sys_role WHERE code = #{code}
+    </select>
+
+    <select id="countUserByRoleId" resultType="int">
+        SELECT COUNT(*) FROM sys_user_role WHERE role_id = #{roleId}
+    </select>
+</mapper>

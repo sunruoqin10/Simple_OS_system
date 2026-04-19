@@ -28,8 +28,12 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="250" fixed="right">
           <template #default="{ row }">
+            <el-button type="primary" size="small" @click="handleAssignRoles(row)">
+              <el-icon><Key /></el-icon>
+              分配角色
+            </el-button>
             <el-button type="primary" size="small" @click="handleEdit(row)">
               <el-icon><Edit /></el-icon>
               编辑
@@ -62,10 +66,10 @@
         <el-form-item label="角色" prop="role">
           <el-select v-model="form.role" placeholder="请选择角色">
             <el-option
-              v-for="role in roleList"
-              :key="role.code"
-              :label="role.name"
-              :value="role.name"
+              v-for="item in roles"
+              :key="item.code"
+              :label="item.name"
+              :value="item.name"
             />
           </el-select>
         </el-form-item>
@@ -99,27 +103,61 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <el-dialog
+      v-model="roleDialogVisible"
+      title="分配角色"
+      width="500px"
+      @close="handleRoleDialogClose"
+    >
+      <div class="role-assign-section">
+        <p class="assign-tip">为用户 {{ currentUser?.username }} 分配角色</p>
+        <el-checkbox-group v-model="selectedRoleIds">
+          <el-checkbox
+            v-for="role in roles"
+            :key="role.id"
+            :label="role.id"
+            :value="role.id"
+            class="role-checkbox-item"
+          >
+            <span class="role-name">{{ role.name }}</span>
+            <span class="role-code">{{ role.code }}</span>
+          </el-checkbox>
+        </el-checkbox-group>
+      </div>
+      <template #footer>
+        <el-button @click="roleDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSaveRoles" :loading="submitLoading">
+          保存
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Key } from '@element-plus/icons-vue'
 import { getUserList, createUser, updateUser, deleteUser } from '@/api/user'
 import { getDepartmentList } from '@/api/department'
 import { getItemsByCategory } from '@/api/dict'
+import { getRoleList, getUserRoles, setUserRoles } from '@/api/role'
 
 const ROLE_CATEGORY_ID = 2
 
 const loading = ref(false)
 const users = ref([])
 const departments = ref([])
-const roleList = ref([])
+const roles = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('新增用户')
 const submitLoading = ref(false)
 const formRef = ref(null)
+
+const roleDialogVisible = ref(false)
+const currentUser = ref(null)
+const selectedRoleIds = ref([])
 
 const form = reactive({
   id: null,
@@ -175,14 +213,14 @@ async function loadDepartments() {
   }
 }
 
-async function loadRoleList() {
+async function loadRoles() {
   try {
-    const res = await getItemsByCategory(ROLE_CATEGORY_ID)
+    const res = await getRoleList()
     if (res.code === 200) {
-      roleList.value = res.data || []
+      roles.value = res.data || []
     }
   } catch (error) {
-    console.error('加载角色字典失败', error)
+    console.error('加载角色列表失败', error)
   }
 }
 
@@ -220,7 +258,7 @@ function handleEdit(row) {
   dialogVisible.value = true
 }
 
-async function handleDelete(row) {
+function handleDelete(row) {
   try {
     await ElMessageBox.confirm(
       `确定要删除用户"${row.username}"吗？`,
@@ -240,8 +278,45 @@ async function handleDelete(row) {
       ElMessage.error(res.message || '删除失败')
     }
   } catch {
-    // 用户取消
   }
+}
+
+async function handleAssignRoles(row) {
+  currentUser.value = row
+  selectedRoleIds.value = []
+  
+  try {
+    const res = await getUserRoles(row.id)
+    if (res.code === 200) {
+      selectedRoleIds.value = res.data || []
+    }
+  } catch (error) {
+    console.error('加载用户角色失败', error)
+  }
+  
+  roleDialogVisible.value = true
+}
+
+async function handleSaveRoles() {
+  try {
+    submitLoading.value = true
+    const res = await setUserRoles(currentUser.value.id, selectedRoleIds.value)
+    if (res.code === 200) {
+      ElMessage.success('角色分配成功')
+      roleDialogVisible.value = false
+    } else {
+      ElMessage.error(res.message || '角色分配失败')
+    }
+  } catch (error) {
+    ElMessage.error('角色分配失败')
+  } finally {
+    submitLoading.value = false
+  }
+}
+
+function handleRoleDialogClose() {
+  selectedRoleIds.value = []
+  currentUser.value = null
 }
 
 async function handleSubmit() {
@@ -290,7 +365,7 @@ function handleDialogClose() {
 onMounted(() => {
   loadUsers()
   loadDepartments()
-  loadRoleList()
+  loadRoles()
 })
 </script>
 
@@ -319,5 +394,31 @@ onMounted(() => {
 
 .el-select {
   width: 100%;
+}
+
+.role-assign-section {
+  padding: 10px 0;
+}
+
+.assign-tip {
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: #303133;
+}
+
+.role-checkbox-item {
+  display: block;
+  margin-bottom: 15px;
+  margin-right: 0;
+}
+
+.role-name {
+  margin-right: 10px;
+  font-weight: 500;
+}
+
+.role-code {
+  color: #909399;
+  font-size: 12px;
 }
 </style>

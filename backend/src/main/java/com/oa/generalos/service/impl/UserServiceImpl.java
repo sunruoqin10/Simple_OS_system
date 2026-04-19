@@ -3,6 +3,7 @@ package com.oa.generalos.service.impl;
 import com.oa.generalos.entity.User;
 import com.oa.generalos.exception.BusinessException;
 import com.oa.generalos.mapper.UserMapper;
+import com.oa.generalos.service.RoleService;
 import com.oa.generalos.service.UserService;
 import com.oa.generalos.utils.JwtUtils;
 import com.oa.generalos.vo.LoginVO;
@@ -27,6 +28,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private JwtUtils jwtUtils;
 
+    @Autowired
+    private RoleService roleService;
+
     @Override
     public LoginVO login(String username, String password) {
         User user = userMapper.findByUsername(username);
@@ -50,11 +54,13 @@ public class UserServiceImpl implements UserService {
 
         userMapper.updateErrorCount(user.getId(), 0);
 
-        String token = jwtUtils.generateToken(user.getId(), user.getUsername());
+        List<String> permissions = roleService.getPermissionCodesByUserId(user.getId());
+        String token = jwtUtils.generateToken(user.getId(), user.getUsername(), permissions);
 
         LoginVO loginVO = new LoginVO();
         loginVO.setToken(token);
         loginVO.setUser(convertToUserVO(user));
+        loginVO.setPermissions(permissions);
 
         return loginVO;
     }
