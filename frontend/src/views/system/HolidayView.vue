@@ -68,7 +68,7 @@
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
-      width="500px"
+      width="550px"
       @close="handleDialogClose"
     >
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
@@ -80,7 +80,13 @@
             :disabled="form.id != null"
           />
         </el-form-item>
-        <el-form-item label="日期" prop="date">
+        <el-form-item label="日期模式" v-if="!form.id">
+          <el-radio-group v-model="dateMode">
+            <el-radio label="single">单个日期</el-radio>
+            <el-radio label="range">日期范围</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="日期" prop="date" v-if="dateMode === 'single' || form.id">
           <el-date-picker
             v-model="form.date"
             type="date"
@@ -88,6 +94,18 @@
             format="YYYY-MM-DD"
             value-format="YYYY-MM-DD"
             @change="handleDateChange"
+          />
+        </el-form-item>
+        <el-form-item label="日期范围" prop="dateRange" v-if="dateMode === 'range' && !form.id">
+          <el-date-picker
+            v-model="form.dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            @change="handleDateRangeChange"
           />
         </el-form-item>
         <el-form-item label="节假日名称" prop="name">
@@ -99,6 +117,14 @@
             <el-radio label="调休">调休（周末上班）</el-radio>
           </el-radio-group>
         </el-form-item>
+        <el-alert
+          v-if="dateMode === 'range' && form.dateRange"
+          type="info"
+          :closable="false"
+          show-icon
+        >
+          将为该日期范围内的每一天创建节假日，共 {{ previewDates.length }} 个
+        </el-alert>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -111,14 +137,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, Refresh } from '@element-plus/icons-vue'
 import {
   getHolidaysByYear,
   createHoliday,
   updateHoliday,
-  deleteHoliday
+  deleteHoliday,
+  batchCreateHolidays
 } from '@/api/holiday'
 
 const loading = ref(false)
@@ -128,6 +155,7 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('新增节假日')
 const submitLoading = ref(false)
 const formRef = ref(null)
+const dateMode = ref('single')
 
 const currentYear = new Date().getFullYear()
 const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i)
@@ -139,20 +167,52 @@ const form = reactive({
   day: null,
   name: '',
   type: '法定节假日',
-  date: ''
+  date: '',
+  dateRange: []
 })
 
-const rules = {
-  date: [
-    { required: true, message: '请选择日期', trigger: 'change' }
-  ],
-  name: [
-    { required: true, message: '请输入节假日名称', trigger: 'blur' }
-  ],
-  type: [
-    { required: true, message: '请选择类型', trigger: 'change' }
-  ]
-}
+const previewDates = computed(() => {
+  if (dateMode.value === 'range' && form.dateRange && form.dateRange.length === 2) {
+    const dates = []
+    const start = new Date(form.dateRange[0])
+    const end = new Date(form.dateRange[1])
+    const current = new Date(start)
+    while (current <= end) {
+      dates.push(new Date(current))
+      current.setDate(current.getDate() + 1)
+    }
+    return dates
+  }
+  return []
+})
+
+const rules = computed(() => {
+  if (dateMode.value === 'range' && !form.id) {
+    return {
+      dateRange: [
+        { required: true, message: '请选择日期范围', trigger: 'change' }
+      ],
+      name: [
+        { required: true, message: '请输入节假日名称', trigger: 'blur' }
+      ],
+      type: [
+        { required: true, message: '请选择类型', trigger: 'change' }
+      ]
+    }
+  } else {
+    return {
+      date: [
+        { required: true, message: '请选择日期', trigger: 'change' }
+      ],
+      name: [
+        { required: true, message: '请输入节假日名称', trigger: 'blur' }
+      ],
+      type: [
+        { required: true, message: '请选择类型', trigger: 'change' }
+      ]
+    }
+  }
+})
 
 async function loadHolidays() {
   loading.value = true
@@ -183,6 +243,8 @@ function handleAdd() {
   form.name = ''
   form.type = '法定节假日'
   form.date = ''
+  form.dateRange = []
+  dateMode.value = 'single'
   dialogVisible.value = true
 }
 
@@ -195,6 +257,8 @@ function handleEdit(row) {
   form.name = row.name
   form.type = row.type
   form.date = `${row.year}-${String(row.month).padStart(2, '0')}-${String(row.day).padStart(2, '0')}`
+  form.dateRange = []
+  dateMode.value = 'single'
   dialogVisible.value = true
 }
 
@@ -204,6 +268,13 @@ function handleDateChange(date) {
     form.year = parseInt(parts[0])
     form.month = parseInt(parts[1])
     form.day = parseInt(parts[2])
+  }
+}
+
+function handleDateRangeChange(dateRange) {
+  if (dateRange && dateRange.length === 2) {
+    const startParts = dateRange[0].split('-')
+    form.year = parseInt(startParts[0])
   }
 }
 
@@ -236,30 +307,53 @@ async function handleSubmit() {
     await formRef.value.validate()
     submitLoading.value = true
 
-    const data = {
-      year: form.year,
-      month: form.month,
-      day: form.day,
-      name: form.name,
-      type: form.type
-    }
-
     let res
     if (form.id) {
+      // 编辑模式
+      const data = {
+        year: form.year,
+        month: form.month,
+        day: form.day,
+        name: form.name,
+        type: form.type
+      }
       res = await updateHoliday(form.id, data)
+    } else if (dateMode.value === 'range') {
+      // 批量创建模式
+      const batchData = previewDates.value.map(date => ({
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        day: date.getDate(),
+        name: form.name,
+        type: form.type
+      }))
+      res = await batchCreateHolidays(batchData)
     } else {
+      // 单个创建模式
+      const data = {
+        year: form.year,
+        month: form.month,
+        day: form.day,
+        name: form.name,
+        type: form.type
+      }
       res = await createHoliday(data)
     }
 
     if (res.code === 200) {
-      ElMessage.success(form.id ? '修改成功' : '添加成功')
+      const successMsg = form.id 
+        ? '修改成功' 
+        : dateMode.value === 'range' 
+          ? `批量添加成功，共 ${previewDates.length} 个节假日` 
+          : '添加成功'
+      ElMessage.success(successMsg)
       dialogVisible.value = false
       loadHolidays()
     } else {
       ElMessage.error(res.message || '操作失败')
     }
   } catch (error) {
-    // 验证失败
+    // 验证失败或操作失败
   } finally {
     submitLoading.value = false
   }
@@ -274,6 +368,8 @@ function handleDialogClose() {
   form.name = ''
   form.type = '法定节假日'
   form.date = ''
+  form.dateRange = []
+  dateMode.value = 'single'
 }
 
 onMounted(() => {

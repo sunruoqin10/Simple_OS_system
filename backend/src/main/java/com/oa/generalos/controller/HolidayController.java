@@ -70,4 +70,10 @@ public class HolidayController {
         holidayService.deleteHolidaysByYear(year);
         return Result.success();
     }
+    
+    @PostMapping("/batch")
+    public Result<Void> batchCreateHolidays(@RequestBody List<Holiday> holidays) {
+        holidayService.batchCreateHolidays(holidays);
+        return Result.success();
+    }
 }

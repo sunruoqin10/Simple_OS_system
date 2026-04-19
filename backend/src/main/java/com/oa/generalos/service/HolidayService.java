@@ -27,4 +27,6 @@ public interface HolidayService {
     void deleteHoliday(Long id);
 
     void deleteHolidaysByYear(Integer year);
+    
+    void batchCreateHolidays(List<Holiday> holidays);
 }

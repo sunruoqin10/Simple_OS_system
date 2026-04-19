@@ -58,3 +58,11 @@ export function deleteHolidaysByYear(year) {
     method: 'delete'
   })
 }
+
+export function batchCreateHolidays(data) {
+  return request({
+    url: '/holiday/batch',
+    method: 'post',
+    data
+  })
+}

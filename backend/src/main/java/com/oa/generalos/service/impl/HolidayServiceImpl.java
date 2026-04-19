@@ -123,4 +123,33 @@ public class HolidayServiceImpl implements HolidayService {
     public void deleteHolidaysByYear(Integer year) {
         holidayMapper.deleteByYear(year);
     }
+    
+    @Override
+    @Transactional
+    public void batchCreateHolidays(List<Holiday> holidays) {
+        if (holidays == null || holidays.isEmpty()) {
+            throw new BusinessException(400, "节假日数据不能为空");
+        }
+        
+        for (Holiday holiday : holidays) {
+            if (holiday.getYear() == null || holiday.getMonth() == null || holiday.getDay() == null) {
+                throw new BusinessException(400, "日期不能为空");
+            }
+            if (holiday.getName() == null || holiday.getName().trim().isEmpty()) {
+                throw new BusinessException(400, "节假日名称不能为空");
+            }
+            if (holiday.getType() == null || holiday.getType().trim().isEmpty()) {
+                holiday.setType("法定节假日");
+            }
+            
+            Holiday existing = holidayMapper.findByDate(holiday.getYear(), holiday.getMonth(), holiday.getDay());
+            if (existing != null) {
+                throw new BusinessException(400, "日期 " + holiday.getYear() + "-" + 
+                    String.format("%02d", holiday.getMonth()) + "-" + 
+                    String.format("%02d", holiday.getDay()) + " 已存在节假日配置");
+            }
+            
+            holidayMapper.insert(holiday);
+        }
+    }
 }
